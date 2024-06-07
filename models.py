@@ -19,7 +19,7 @@ class Predict:
         self.model = tf.keras.models.load_model(temp_name)
         os.remove(temp_name)
 
-    async def create_suffix(self):
+    def create_suffix(self):
         return ''.join(random.choice(string.ascii_letters) for i in range(14))
 
     async def download_from_bucket(self, srcpath, despath):

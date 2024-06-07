@@ -1,8 +1,8 @@
-from flask import Quart, jsonify, request
+from flask import Flask, jsonify, request
 from models import Predict
 
 predict = Predict()
-app = Quart(__name__)
+app = Flask(__name__)
 
 @app.route('/api/hello', methods=['GET'])
 async def hello():
@@ -10,7 +10,7 @@ async def hello():
 
 @app.route('/api/predict', methods=['POST'])
 async def predict_image():
-    data = await request.json
+    data = request.json
     image_path = data.get('path')
     result, evaluation = await predict.get_result(image_path)
 
