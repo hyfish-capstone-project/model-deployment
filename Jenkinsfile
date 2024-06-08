@@ -30,6 +30,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    sh 'docker stop hyfish-model-container || true'
+                    sh 'docker system prune -af'
                     sh 'docker build -t hyfish-model .'
                 }
             }
@@ -37,8 +39,6 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    sh 'docker stop hyfish-model-container || true'
-                    sh 'docker rm hyfish-model-container || true'
                     sh 'docker run -d -p 5000:5000 --name hyfish-model-container hyfish-model'
                 }
             }
@@ -51,9 +51,8 @@ pipeline {
 
                 withCredentials([
                     string(credentialsId: 'discord-webhook', variable: 'DISCORD_WEBHOOK_URL'),
-                    string(credentialsId: 'model-deployment-url', variable: 'MODEL_URL')
                 ]) {
-                    discordSend description: "Server:\n${MODEL_URL}\n\nLast Commit:\n\"${commitMessage}\"", 
+                    discordSend description: "Last Commit:\n\"${commitMessage}\"", 
                                 footer: 'Jenkins CI/CD', 
                                 link: env.BUILD_URL, 
                                 result: currentBuild.currentResult, 
