@@ -15,18 +15,19 @@ class Predict:
         load_dotenv();
         self.bucket_name = os.environ.get("BUCKET_NAME")
         temp_name = self.create_suffix() + ".h5"
-        asyncio.run(self.download_from_bucket(os.environ.get("CLASSIFIER_MODEL_PATH"), temp_name))
+        self.download_from_bucket(os.environ.get("CLASSIFIER_MODEL_PATH"), temp_name)
         self.model = tf.keras.models.load_model(temp_name)
         os.remove(temp_name)
 
     def create_suffix(self):
         return ''.join(random.choice(string.ascii_letters) for i in range(14))
 
-    async def download_from_bucket(self, srcpath, despath):
+    def download_from_bucket(self, srcpath, despath):
         storage_client = storage.Client()
         bucket = storage_client.bucket(self.bucket_name)
         blob = bucket.blob(srcpath)
         blob.download_to_filename(despath)
+        return blob
 
     async def load_and_preprocess_image(self, image_file, target_size=(150, 150)):
         img = image.load_img(image_file, target_size=target_size)
@@ -45,6 +46,6 @@ class Predict:
     
     async def get_result(self, filepath):
         filename = self.create_suffix() + ".jpg"
-        await self.download_from_bucket(filepath, filename)
+        self.download_from_bucket(filepath, filename)
         predicted_label, predictions = await self.predict_image(filename)
         return predicted_label, predictions

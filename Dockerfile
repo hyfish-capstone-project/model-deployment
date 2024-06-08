@@ -1,24 +1,23 @@
-FROM python:3.8-alpine
+FROM python:3.11
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-RUN apk update && apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    musl-dev \
+    libc-dev \
     libffi-dev \
-    openssl-dev \
+    libssl-dev \
     make \
-    && apk add --no-cache --virtual .build-deps \
-    g++ \
-    && pip install --no-cache-dir -r requirements.txt \
-    && apk del .build-deps
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
