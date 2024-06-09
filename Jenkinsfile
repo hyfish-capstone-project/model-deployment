@@ -39,7 +39,7 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    sh 'docker run -d -p 5000:5000 --name hyfish-model-container hyfish-model'
+                    sh 'docker run --net hyfish-network --ip 192.168.1.20 -d -p 5000:5000 --name hyfish-model-container hyfish-model'
                 }
             }
         }
@@ -51,8 +51,9 @@ pipeline {
 
                 withCredentials([
                     string(credentialsId: 'discord-webhook', variable: 'DISCORD_WEBHOOK_URL'),
+                    string(credentialsId: 'hyfish-api-model-url', variable: 'MODEL_URL')
                 ]) {
-                    discordSend description: "Last Commit:\n\"${commitMessage}\"", 
+                    discordSend description: "URL:\n${MODEL_URL}\n\nLast Commit:\n\"${commitMessage}\"", 
                                 footer: 'Jenkins CI/CD', 
                                 link: env.BUILD_URL, 
                                 result: currentBuild.currentResult, 
