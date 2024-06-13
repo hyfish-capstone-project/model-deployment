@@ -53,7 +53,7 @@ pipeline {
                     string(credentialsId: 'discord-webhook', variable: 'DISCORD_WEBHOOK_URL'),
                     string(credentialsId: 'hyfish-api-model-url', variable: 'MODEL_URL')
                 ]) {
-                    discordSend description: "URL:\n${MODEL_URL}\n\nLast Commit:\n\"${commitMessage}\"", 
+                    discordSend description: "URL:\n${MODEL_URL}\n\nUsage:\n  # Fish Classification\n  # Fish Freshness Detection\n  # Toxic Sentence Classification\n\nLast Commit:\n\"${commitMessage}\"", 
                                 footer: 'Jenkins CI/CD', 
                                 link: env.BUILD_URL, 
                                 result: currentBuild.currentResult, 

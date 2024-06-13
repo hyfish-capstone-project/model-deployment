@@ -2,5 +2,6 @@ Flask[async]
 google-cloud-storage
 pillow
 python-dotenv
-tensorflow-cpu
+tensorflow-cpu==2.15.0
 gunicorn
+joblib

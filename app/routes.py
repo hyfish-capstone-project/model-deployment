@@ -26,7 +26,7 @@ async def detect_image():
 @app.route('/api/toxic', methods=['POST'])
 async def predict_text():
     data = request.json
-    sentence = [data.get('sentence')]
+    sentence = data.get('sentence')
     result, score = await model.infer(sentence)
 
     return jsonify({'result': result, 'score': score}), 200

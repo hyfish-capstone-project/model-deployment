@@ -9,7 +9,7 @@ import string
 import random
 import os
 import asyncio
-import pickle
+import joblib
 
 class Predict:
     def __init__(self):
@@ -30,13 +30,14 @@ class Predict:
 
         temp_name = self.create_suffix() + ".h5"
         self.download_from_bucket(os.environ.get("TOXIC_MODEL_PATH"), temp_name)
-        self.toxic_model = tf.keras.models.load_model(temp_name)
+        self.toxic_model = tf.keras.models.load_model(temp_name, compile=False)
+        self.toxic_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         os.remove(temp_name)
 
-        temp_name = self.create_suffix() + ".pickle"
+        temp_name = self.create_suffix() + ".joblib"
         self.download_from_bucket(os.environ.get("TOXIC_TOKENIZER_PATH"), temp_name)
         with open(temp_name, 'rb') as handle:
-            self.tokenizer = pickle.load(handle)
+            self.tokenizer = joblib.load(handle)
         os.remove(temp_name)
 
     def create_suffix(self):
@@ -55,9 +56,9 @@ class Predict:
 
         prob_num = self.toxic_model.predict(padded)[0][0] 
         if prob_num > 0.8 :
-            return 'Toxic',prob_num
+            return 'Toxic', float(prob_num)
         else:
-            return 'Not Toxic',prob_num
+            return 'Not Toxic', float(prob_num)
 
     async def load_and_preprocess_image(self, image_file, target_size=(150, 150)):
         img = image.load_img(image_file, target_size=target_size)
