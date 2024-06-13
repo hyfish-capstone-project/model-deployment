@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
-from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from google.cloud import storage
 import numpy as np
@@ -23,10 +22,10 @@ class Predict:
         self.classifier_model = tf.keras.models.load_model(temp_name)
         os.remove(temp_name)
 
-        # temp_name = self.create_suffix() + ".h5"
-        # self.download_from_bucket(os.environ.get("FRESHNESS_MODEL_PATH"), temp_name)
-        # self.freshness_model = tf.keras.models.load_model(temp_name)
-        # os.remove(temp_name)
+        temp_name = self.create_suffix() + ".h5"
+        self.download_from_bucket(os.environ.get("FRESHNESS_MODEL_PATH"), temp_name)
+        self.freshness_model = tf.keras.models.load_model(temp_name)
+        os.remove(temp_name)
 
         temp_name = self.create_suffix() + ".h5"
         self.download_from_bucket(os.environ.get("TOXIC_MODEL_PATH"), temp_name)
@@ -50,6 +49,26 @@ class Predict:
         blob.download_to_filename(despath)
         return blob
     
+    async def freshness_preprocessing(self, img_path, target_size=(150, 150)):
+        img = image.load_img(img_path, target_size=target_size)
+        os.remove(img_path)
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = tf.keras.applications.inception_v3.preprocess_input(img_array)
+        return img_array
+
+    async def predict_freshness(self, img_path):
+        filename = self.create_suffix() + ".jpg"
+        self.download_from_bucket(img_path, filename)
+
+        img_array = await self.freshness_preprocessing(filename)
+        prediction = self.freshness_model.predict(img_array)
+        if prediction[0] > 0.5:
+            predicted_class = "Fresh"
+        else:
+            predicted_class = "Not Fresh"
+        return predicted_class, float(prediction[0])
+    
     async def infer(self, sentence):
         sequences = self.tokenizer.texts_to_sequences([sentence])
         padded = pad_sequences(sequences, maxlen=36, padding='post', truncating='post')
@@ -60,7 +79,7 @@ class Predict:
         else:
             return 'Not Toxic', float(prob_num)
 
-    async def load_and_preprocess_image(self, image_file, target_size=(150, 150)):
+    async def calssifier_preprocessing(self, image_file, target_size=(150, 150)):
         img = image.load_img(image_file, target_size=target_size)
         os.remove(image_file)
         img_array = image.img_to_array(img)
@@ -69,13 +88,13 @@ class Predict:
         return img_array
 
     async def predict_image(self, image_file):
-        img_array = await self.load_and_preprocess_image(image_file)
+        img_array = await self.calssifier_preprocessing(image_file)
         predictions = self.classifier_model.predict(img_array)
         predicted_class = np.argmax(predictions, axis=1)[0]
         predicted_label = self.class_labels[predicted_class]
         return predicted_label, float(predictions[0][predicted_class])
     
-    async def get_result(self, filepath):
+    async def predict_fish(self, filepath):
         filename = self.create_suffix() + ".jpg"
         self.download_from_bucket(filepath, filename)
         predicted_label, predictions = await self.predict_image(filename)
