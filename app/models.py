@@ -64,9 +64,9 @@ class Predict:
         img_array = await self.freshness_preprocessing(filename)
         prediction = self.freshness_model.predict(img_array)
         if prediction[0] > 0.5:
-            predicted_class = "Fresh"
-        else:
             predicted_class = "Not Fresh"
+        else:
+            predicted_class = "Fresh"
         return predicted_class, float(prediction[0])
     
     async def infer(self, sentence):
