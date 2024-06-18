@@ -70,11 +70,12 @@ class Predict:
         return predicted_class, float(prediction[0])
     
     async def infer(self, sentence):
-        sequences = self.tokenizer.texts_to_sequences([sentence])
+        lowCaseSentence = sentence.lower()
+        sequences = self.tokenizer.texts_to_sequences([lowCaseSentence])
         padded = pad_sequences(sequences, maxlen=36, padding='post', truncating='post')
 
         prob_num = self.toxic_model.predict(padded)[0][0] 
-        if prob_num > 0.8 :
+        if prob_num > 0.6 :
             return 'Toxic', float(prob_num)
         else:
             return 'Not Toxic', float(prob_num)
