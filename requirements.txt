@@ -3,5 +3,6 @@ google-cloud-storage
 pillow
 python-dotenv
 tensorflow-cpu==2.15.0
-gunicorn
+guni
 joblib
+ultralytics

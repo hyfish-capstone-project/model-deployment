@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libc-dev \
     libffi-dev \
     libssl-dev \
+    libgl1-mesa-glx \
     make \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

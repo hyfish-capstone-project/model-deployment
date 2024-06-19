@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from ultralytics import YOLO
 from google.cloud import storage
 import numpy as np
 from dotenv import load_dotenv
@@ -22,9 +23,9 @@ class Predict:
         self.classifier_model = tf.keras.models.load_model(temp_name)
         os.remove(temp_name)
 
-        temp_name = self.create_suffix() + ".h5"
+        temp_name = self.create_suffix() + ".pt"
         self.download_from_bucket(os.environ.get("FRESHNESS_MODEL_PATH"), temp_name)
-        self.freshness_model = tf.keras.models.load_model(temp_name)
+        self.freshness_model = YOLO(temp_name)
         os.remove(temp_name)
 
         temp_name = self.create_suffix() + ".h5"
@@ -48,26 +49,17 @@ class Predict:
         blob = bucket.blob(srcpath)
         blob.download_to_filename(despath)
         return blob
-    
-    async def freshness_preprocessing(self, img_path, target_size=(150, 150)):
-        img = image.load_img(img_path, target_size=target_size)
-        os.remove(img_path)
-        img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0)
-        img_array = tf.keras.applications.inception_v3.preprocess_input(img_array)
-        return img_array
 
     async def predict_freshness(self, img_path):
         filename = self.create_suffix() + ".jpg"
         self.download_from_bucket(img_path, filename)
+        results = self.freshness_model(filename)
+        os.remove(filename)
 
-        img_array = await self.freshness_preprocessing(filename)
-        prediction = self.freshness_model.predict(img_array)
-        if prediction[0] > 0.5:
-            predicted_class = "Not Fresh"
+        if int(results[0].boxes[0].cls) == 0:
+            return "Fresh", results[0].boxes[0].conf.item()
         else:
-            predicted_class = "Fresh"
-        return predicted_class, float(prediction[0])
+            return "Not Fresh", results[0].boxes[0].conf.item()
     
     async def infer(self, sentence):
         lowCaseSentence = sentence.lower()
