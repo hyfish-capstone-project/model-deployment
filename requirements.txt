@@ -3,6 +3,6 @@ google-cloud-storage
 pillow
 python-dotenv
 tensorflow-cpu==2.15.0
-guni
+gunicorn
 joblib
 ultralytics
